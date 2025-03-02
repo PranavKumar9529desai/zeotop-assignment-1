@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CellData, CellStyle } from "../spreadsheet/types";
 
 interface CellProps {
@@ -28,12 +28,42 @@ export default function Cell({
 }: CellProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const cellRef = useRef<HTMLTableCellElement>(null);
+  const [localValue, setLocalValue] = useState(data.formula || data.value);
+  const timeoutRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    setLocalValue(data.formula || data.value);
+  }, [data.formula, data.value]);
 
   useEffect(() => {
     if (isSelected && isEditing && inputRef.current) {
       inputRef.current.focus();
     }
   }, [isSelected, isEditing]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setLocalValue(newValue);
+    
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // Debounce the actual state update
+    timeoutRef.current = setTimeout(() => {
+      onChange(newValue);
+    }, 150);
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleClick = () => {
     onSelect(row, col);
@@ -118,8 +148,8 @@ export default function Cell({
         <input
           ref={inputRef}
           type="text"
-          value={data.formula || data.value}
-          onChange={(e) => onChange(e.target.value)}
+          value={localValue}
+          onChange={handleInputChange}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           className="absolute inset-0 w-full h-full px-1 border-2 border-blue-500 outline-none text-[var(--spreadsheet-text-input)]"
