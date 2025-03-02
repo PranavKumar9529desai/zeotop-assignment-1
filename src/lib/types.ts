@@ -17,7 +17,7 @@ export type FormulaError = {
 };
 
 export type CalculationError = {
-  type: "RANGE_ERROR" | "VALUE_ERROR" | "FORMULA_ERROR";
+  type: 'RANGE_ERROR' | 'VALUE_ERROR' | 'FORMULA_ERROR';
   message: string;
 };
 
@@ -25,4 +25,4 @@ export type CalculationResult = {
   value: number | null;
   error?: CalculationError;
   numericValues?: number[];
-}; 
+};

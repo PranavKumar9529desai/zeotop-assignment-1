@@ -30,9 +30,9 @@ describe('Spreadsheet Multiple Selection', () => {
     fireEvent.click(lastCell, { shiftKey: true });
 
     // Check if cells in between are selected
-    const selectedCells = cells.slice(0, 11).filter((cell: HTMLElement) => 
-      cell.classList.contains('spreadsheet-selected')
-    );
+    const selectedCells = cells
+      .slice(0, 11)
+      .filter((cell: HTMLElement) => cell.classList.contains('spreadsheet-selected'));
     expect(selectedCells.length).toBe(11); // All cells from index 0 to 10 should be selected
   });
 
@@ -144,10 +144,10 @@ describe('Spreadsheet Multiple Selection', () => {
 
     // Press enter to confirm edit
     fireEvent.keyDown(cellInput, { key: 'Enter' });
-    
+
     // Wait for the state update
     await waitFor(() => {
       expect(firstCell).toHaveTextContent('test value');
     });
   });
-}); 
+});

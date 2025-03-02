@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { CellPosition, SelectionState } from "./types";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { CellPosition, SelectionState } from './types';
 
 interface RangeSelectorProps {
   selection: SelectionState;
@@ -25,20 +25,18 @@ function parseCellReference(ref: string): CellPosition | null {
   return { row, col };
 }
 
-export function RangeSelector({
-  selection,
-  onRangeChange,
-}: RangeSelectorProps) {
+export function RangeSelector({ selection, onRangeChange }: RangeSelectorProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState("");
+  const [editValue, setEditValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const currentRange = selection.ranges[selection.ranges.length - 1];
   const rangeText = currentRange
-    ? currentRange.start.row === currentRange.end.row && currentRange.start.col === currentRange.end.col
+    ? currentRange.start.row === currentRange.end.row &&
+      currentRange.start.col === currentRange.end.col
       ? getCellReference(currentRange.start)
       : `${getCellReference(currentRange.start)}:${getCellReference(currentRange.end)}`
-    : "";
+    : '';
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -58,9 +56,9 @@ export function RangeSelector({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === "Enter") {
+      if (e.key === 'Enter') {
         e.preventDefault();
-        const [startRef, endRef] = editValue.split(":");
+        const [startRef, endRef] = editValue.split(':');
         const start = parseCellReference(startRef);
         const end = parseCellReference(endRef || startRef);
 
@@ -68,7 +66,7 @@ export function RangeSelector({
           onRangeChange({ start, end });
         }
         setIsEditing(false);
-      } else if (e.key === "Escape") {
+      } else if (e.key === 'Escape') {
         setIsEditing(false);
       }
     },

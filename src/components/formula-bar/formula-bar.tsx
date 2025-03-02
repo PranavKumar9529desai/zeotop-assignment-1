@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
 import Tippy from '@tippyjs/react';
 import { useCallback, useRef, useState } from 'react';
-import { RangeSelector } from "../spreadsheet/RangeSelector";
-import type { CellPosition, SelectionState } from "../spreadsheet/types";
+import { RangeSelector } from '../spreadsheet/RangeSelector';
+import type { CellPosition, SelectionState } from '../spreadsheet/types';
 import 'tippy.js/dist/tippy.css';
 import '@/styles/formula-suggestions.css';
-import { type FormulaSuggestion, getFormulaSuggestions } from "@/lib/formulaSuggestions";
+import { type FormulaSuggestion, getFormulaSuggestions } from '@/lib/formulaSuggestions';
 
 interface FormulaBarProps {
   selectedCell: { row: number; col: number } | null;
@@ -46,45 +46,48 @@ export function FormulaBar({
     setSelectedIndex(0); // Reset selection when input changes
   };
 
-  const handleSuggestionClick = useCallback((suggestion: FormulaSuggestion) => {
-    onChange(`=${suggestion.name}(`);
-    setSuggestions([]);
-    setSelectedIndex(0);
-    inputRef.current?.focus();
-  }, [onChange]);
+  const handleSuggestionClick = useCallback(
+    (suggestion: FormulaSuggestion) => {
+      onChange(`=${suggestion.name}(`);
+      setSuggestions([]);
+      setSelectedIndex(0);
+      inputRef.current?.focus();
+    },
+    [onChange]
+  );
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!suggestions.length) return;
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (!suggestions.length) return;
 
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev + 1) % suggestions.length);
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length);
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (suggestions[selectedIndex]) {
-          handleSuggestionClick(suggestions[selectedIndex]);
-        }
-        break;
-      case 'Escape':
-        setSuggestions([]);
-        setSelectedIndex(0);
-        break;
-    }
-  }, [suggestions, selectedIndex, handleSuggestionClick]);
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev + 1) % suggestions.length);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length);
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (suggestions[selectedIndex]) {
+            handleSuggestionClick(suggestions[selectedIndex]);
+          }
+          break;
+        case 'Escape':
+          setSuggestions([]);
+          setSelectedIndex(0);
+          break;
+      }
+    },
+    [suggestions, selectedIndex, handleSuggestionClick]
+  );
 
   return (
     <div className="flex items-center h-8 border-b border-[var(--spreadsheet-border)] bg-[var(--spreadsheet-header-bg)]">
       <div className="sticky top-0 left-0 z-40 flex items-center h-8 bg-[var(--spreadsheet-header-bg)] border-b border-[var(--spreadsheet-border)]">
-        <RangeSelector
-          selection={selection}
-          onRangeChange={handleRangeChange}
-        />
+        <RangeSelector selection={selection} onRangeChange={handleRangeChange} />
       </div>
       <div className="flex items-center justify-center w-8 h-full border-x border-[var(--spreadsheet-border)] text-[var(--spreadsheet-text-primary)]">
         fx
@@ -112,16 +115,24 @@ export function FormulaBar({
                       <div className="mt-2 bg-gray-50 p-2 rounded border border-gray-100">
                         <div className="text-xs font-medium text-gray-500 mb-1">Example:</div>
                         <div className="font-mono text-sm">
-                          <span className="text-blue-600">{suggestion.example.split(' → ')[0]}</span>
+                          <span className="text-blue-600">
+                            {suggestion.example.split(' → ')[0]}
+                          </span>
                           <span className="text-gray-400 mx-1">→</span>
-                          <span className="text-green-600">{suggestion.example.split(' → ')[1]}</span>
+                          <span className="text-green-600">
+                            {suggestion.example.split(' → ')[1]}
+                          </span>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-gray-900 min-w-[80px]">{suggestion.name}</span>
-                      <span className="text-gray-700 text-xs truncate">{suggestion.description}</span>
+                      <span className="font-semibold text-gray-900 min-w-[80px]">
+                        {suggestion.name}
+                      </span>
+                      <span className="text-gray-700 text-xs truncate">
+                        {suggestion.description}
+                      </span>
                     </div>
                   )}
                 </button>
@@ -137,7 +148,7 @@ export function FormulaBar({
             value={value}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder={selectedCell ? "Enter a value or formula (start with = for formulas)" : ""}
+            placeholder={selectedCell ? 'Enter a value or formula (start with = for formulas)' : ''}
             disabled={!selectedCell}
             onClick={(e) => e.currentTarget.select()}
             className="w-full h-6 px-1 bg-white outline-none text-gray-900 disabled:bg-[var(--spreadsheet-header-bg)] disabled:text-[var(--spreadsheet-text-primary)] placeholder:text-gray-500 focus:border focus:border-blue-500 rounded-sm"

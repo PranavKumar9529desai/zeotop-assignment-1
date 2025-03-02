@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import type { CellData } from "../spreadsheet/types";
+import { useEffect, useRef, useState } from 'react';
+import type { CellData } from '../spreadsheet/types';
 
 interface CellProps {
   row: number;
@@ -13,6 +13,7 @@ interface CellProps {
   isEditing: boolean;
   onStartEdit: () => void;
   onStopEdit: () => void;
+  width: number;
 }
 
 export default function Cell({
@@ -25,14 +26,15 @@ export default function Cell({
   isEditing,
   onStartEdit,
   onStopEdit,
+  width,
 }: CellProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const cellRef = useRef<HTMLTableCellElement>(null);
-  const [localValue, setLocalValue] = useState(data.formula || data.value);
+  const [localValue, setLocalValue] = useState(() => data.formula || data.value || '');
   const timeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
-    setLocalValue(data.formula || data.value);
+    setLocalValue(data.formula || data.value || '');
   }, [data.formula, data.value]);
 
   useEffect(() => {
@@ -44,7 +46,7 @@ export default function Cell({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setLocalValue(newValue);
-    
+
     // Clear any existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -78,21 +80,21 @@ export default function Cell({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       if (isEditing) {
         onStopEdit();
       } else {
         onStartEdit();
       }
       e.preventDefault();
-    } else if (e.key === "Escape" && isEditing) {
+    } else if (e.key === 'Escape' && isEditing) {
       onStopEdit();
     } else if (!isEditing) {
       // Navigation when not editing
       const moveAmount = e.shiftKey ? 5 : 1; // Move 5 cells at a time with Shift
-      
+
       switch (e.key) {
-        case "ArrowUp":
+        case 'ArrowUp':
           e.preventDefault();
           if (row >= moveAmount) {
             onSelect(row - moveAmount, col);
@@ -100,11 +102,11 @@ export default function Cell({
             onSelect(0, col); // Move to first row
           }
           break;
-        case "ArrowDown":
+        case 'ArrowDown':
           e.preventDefault();
           onSelect(row + moveAmount, col);
           break;
-        case "ArrowLeft":
+        case 'ArrowLeft':
           e.preventDefault();
           if (col >= moveAmount) {
             onSelect(row, col - moveAmount);
@@ -112,11 +114,11 @@ export default function Cell({
             onSelect(row, 0); // Move to first column
           }
           break;
-        case "ArrowRight":
+        case 'ArrowRight':
           e.preventDefault();
           onSelect(row, col + moveAmount);
           break;
-        case "Home":
+        case 'Home':
           e.preventDefault();
           if (e.ctrlKey || e.metaKey) {
             onSelect(0, 0); // Move to first cell
@@ -124,7 +126,7 @@ export default function Cell({
             onSelect(row, 0); // Move to start of row
           }
           break;
-        case "End":
+        case 'End':
           e.preventDefault();
           if (e.ctrlKey || e.metaKey) {
             onSelect(99, 25); // Move to last cell (assuming 100 rows, 26 columns)
@@ -132,7 +134,7 @@ export default function Cell({
             onSelect(row, 25); // Move to end of row
           }
           break;
-        case "PageUp":
+        case 'PageUp':
           e.preventDefault();
           if (row >= 10) {
             onSelect(row - 10, col);
@@ -140,7 +142,7 @@ export default function Cell({
             onSelect(0, col);
           }
           break;
-        case "PageDown":
+        case 'PageDown':
           e.preventDefault();
           onSelect(row + 10, col);
           break;
@@ -148,35 +150,36 @@ export default function Cell({
     }
   };
 
-  const getCellStyles = (styles: CellData["styles"]): string => {
-    const classNames = ["w-full h-full px-1 overflow-hidden text-sm leading-8 text-[var(--spreadsheet-text-primary)]"];
+  const getCellStyles = (styles: CellData['styles']): string => {
+    const classNames = [
+      'w-full h-full px-1 overflow-hidden text-sm leading-8 text-[var(--spreadsheet-text-primary)]',
+    ];
 
-    if (styles.bold) classNames.push("font-bold");
-    if (styles.italic) classNames.push("italic");
-    if (styles.underline) classNames.push("underline");
+    if (styles.bold) classNames.push('font-bold');
+    if (styles.italic) classNames.push('italic');
+    if (styles.underline) classNames.push('underline');
 
     switch (styles.align) {
-      case "center":
-        classNames.push("text-center");
+      case 'center':
+        classNames.push('text-center');
         break;
-      case "right":
-        classNames.push("text-right");
+      case 'right':
+        classNames.push('text-right');
         break;
       default:
-        classNames.push("text-left");
+        classNames.push('text-left');
     }
 
-    return classNames.join(" ");
+    return classNames.join(' ');
   };
 
   return (
     <td
       ref={cellRef}
-      role="gridcell"
-      tabIndex={isSelected ? 0 : -1}
-      className={`spreadsheet-cell w-24 h-8 border-r border-b relative p-0 ${
-        isSelected ? "spreadsheet-selected" : ""
+      className={`spreadsheet-cell border-r border-b relative p-0 ${
+        isSelected ? 'spreadsheet-selected' : ''
       }`}
+      style={{ width }}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       onKeyDown={handleKeyDown}

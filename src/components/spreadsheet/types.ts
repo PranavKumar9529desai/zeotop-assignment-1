@@ -42,8 +42,8 @@ export function getDefaultCellData(): CellData {
   return {
     value: '',
     styles: {
-      align: 'left'
-    }
+      align: 'left',
+    },
   };
 }
 
@@ -53,14 +53,9 @@ export function isCellInRange(cell: CellPosition, range: CellRange): boolean {
   const minCol = Math.min(range.start.col, range.end.col);
   const maxCol = Math.max(range.start.col, range.end.col);
 
-  return (
-    cell.row >= minRow &&
-    cell.row <= maxRow &&
-    cell.col >= minCol &&
-    cell.col <= maxCol
-  );
+  return cell.row >= minRow && cell.row <= maxRow && cell.col >= minCol && cell.col <= maxCol;
 }
 
 export function isCellSelected(cell: CellPosition, selection: SelectionState): boolean {
-  return selection.ranges.some(range => isCellInRange(cell, range));
-} 
+  return selection.ranges.some((range) => isCellInRange(cell, range));
+}

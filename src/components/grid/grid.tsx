@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useCallback, useRef } from "react";
-import { RangeSelector } from "../spreadsheet/RangeSelector";
+import { useGridSizes } from '@/hooks/useGridSizes';
+import { useCallback, useRef, useState } from 'react';
 import {
   type CellData,
   type CellPosition,
@@ -9,9 +9,11 @@ import {
   type SpreadsheetData,
   getCellKey,
   isCellSelected,
-} from "../spreadsheet/types";
-import Cell from "./cell";
-import { GridHeader } from "./grid-header";
+} from '../spreadsheet/types';
+import Cell from './cell';
+import { DEFAULT_COLUMN_WIDTH, DEFAULT_ROW_HEIGHT, MIN_ROW_HEIGHT } from './grid-constants';
+import { GridHeader } from './grid-header';
+import { ResizeHandle } from './resize-handle';
 
 interface GridProps {
   rowCount?: number;
@@ -39,6 +41,42 @@ export default function Grid({
   onStopEdit,
 }: GridProps) {
   const gridRef = useRef<HTMLDivElement>(null);
+  const [, setIsResizing] = useState(false);
+  const { sizes, updateSizes, saveSizes } = useGridSizes();
+  const { columns: columnSizes, rows: rowSizes } = sizes;
+
+  const handleColumnResize = useCallback(
+    (index: number, newWidth: number) => {
+      setIsResizing(true);
+      updateSizes(
+        {
+          ...sizes,
+          columns: { ...sizes.columns, [index]: newWidth },
+        },
+        false
+      ); // Don't save while resizing
+    },
+    [sizes, updateSizes]
+  );
+
+  const handleRowResize = useCallback(
+    (index: number, newHeight: number) => {
+      setIsResizing(true);
+      updateSizes(
+        {
+          ...sizes,
+          rows: { ...sizes.rows, [index]: newHeight },
+        },
+        false
+      ); // Don't save while resizing
+    },
+    [sizes, updateSizes]
+  );
+
+  const handleResizeEnd = useCallback(() => {
+    setIsResizing(false);
+    saveSizes(sizes); // Save only when resizing ends
+  }, [saveSizes, sizes]);
 
   const handleCellSelect = useCallback(
     (row: number, col: number, event?: React.MouseEvent) => {
@@ -50,8 +88,8 @@ export default function Grid({
   const getCellData = (row: number, col: number): CellData => {
     return (
       data.get(getCellKey({ row, col })) || {
-        value: "",
-        styles: { align: "left" },
+        value: '',
+        styles: { align: 'left' },
       }
     );
   };
@@ -71,11 +109,7 @@ export default function Grid({
     });
 
   const getHeaderHighlightClass = (isSelected: boolean, isActive: boolean) =>
-    isActive
-      ? "spreadsheet-header-active"
-      : isSelected
-      ? "spreadsheet-header-highlight"
-      : "";
+    isActive ? 'spreadsheet-header-active' : isSelected ? 'spreadsheet-header-highlight' : '';
 
   const handleRowHeaderSelect = useCallback(
     (rowIndex: number, event?: React.MouseEvent) => {
@@ -98,10 +132,7 @@ export default function Grid({
           ranges: updatedRanges,
           activeCell: selection.activeCell,
         });
-      } else if (
-        (event?.metaKey || event?.ctrlKey) &&
-        selection.ranges.length > 0
-      ) {
+      } else if ((event?.metaKey || event?.ctrlKey) && selection.ranges.length > 0) {
         setSelection({
           ranges: [...selection.ranges, range],
           activeCell: range.start,
@@ -137,10 +168,7 @@ export default function Grid({
           ranges: updatedRanges,
           activeCell: selection.activeCell,
         });
-      } else if (
-        (event?.metaKey || event?.ctrlKey) &&
-        selection.ranges.length > 0
-      ) {
+      } else if ((event?.metaKey || event?.ctrlKey) && selection.ranges.length > 0) {
         setSelection({
           ranges: [...selection.ranges, range],
           activeCell: range.start,
@@ -157,7 +185,7 @@ export default function Grid({
 
   const handleRowHeaderKeyDown = useCallback(
     (rowIndex: number, event: React.KeyboardEvent) => {
-      if (event.key === "Enter" || event.key === " ") {
+      if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
         handleRowHeaderSelect(rowIndex);
       }
@@ -165,20 +193,20 @@ export default function Grid({
     [handleRowHeaderSelect]
   );
 
-  
-
   return (
     <div
       className="w-full h-full overflow-auto relative bg-[var(--spreadsheet-cell-bg)]"
       ref={gridRef}
+      onMouseUp={handleResizeEnd}
     >
-      
       <table className="border-collapse table-fixed">
         <GridHeader
           columnCount={columnCount}
           selectedColumn={selection.activeCell?.col ?? null}
           onColumnSelect={handleColumnHeaderSelect}
           isColumnSelected={isColSelected}
+          columnSizes={columnSizes}
+          onColumnResize={handleColumnResize}
         />
         <tbody>
           {Array.from({ length: rowCount }, (_, rowIndex) => (
@@ -186,10 +214,11 @@ export default function Grid({
               {/* Row header */}
               <th
                 scope="row"
-                className={`spreadsheet-header left-0 z-20 w-12 h-8 border-r border-b p-0 ${getHeaderHighlightClass(
+                className={`spreadsheet-header left-0 z-20 border-r border-b p-0 relative ${getHeaderHighlightClass(
                   isRowSelected(rowIndex),
                   rowIndex === selection.activeCell?.row
                 )}`}
+                style={{ height: rowSizes[rowIndex] || DEFAULT_ROW_HEIGHT }}
               >
                 <button
                   type="button"
@@ -203,6 +232,13 @@ export default function Grid({
                 >
                   {rowIndex + 1}
                 </button>
+                <ResizeHandle
+                  type="row"
+                  index={rowIndex}
+                  onResize={handleRowResize}
+                  defaultSize={rowSizes[rowIndex] || DEFAULT_ROW_HEIGHT}
+                  minSize={MIN_ROW_HEIGHT}
+                />
               </th>
 
               {/* Row cells */}
@@ -212,18 +248,13 @@ export default function Grid({
                   row={rowIndex}
                   col={colIndex}
                   data={getCellData(rowIndex, colIndex)}
-                  isSelected={isCellSelected(
-                    { row: rowIndex, col: colIndex },
-                    selection
-                  )}
-                  isEditing={
-                    editingCell?.row === rowIndex &&
-                    editingCell?.col === colIndex
-                  }
+                  isSelected={isCellSelected({ row: rowIndex, col: colIndex }, selection)}
+                  isEditing={editingCell?.row === rowIndex && editingCell?.col === colIndex}
                   onSelect={handleCellSelect}
                   onChange={(value) => onCellChange(rowIndex, colIndex, value)}
                   onStartEdit={() => onStartEdit(rowIndex, colIndex)}
                   onStopEdit={onStopEdit}
+                  width={columnSizes[colIndex] || DEFAULT_COLUMN_WIDTH}
                 />
               ))}
             </tr>

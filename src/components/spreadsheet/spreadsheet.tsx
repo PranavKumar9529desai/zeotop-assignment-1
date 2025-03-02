@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { FormulaBar } from "@/components/formula-bar/formula-bar";
-import Grid from "@/components/grid/grid";
-import { Toolbar } from "@/components/toolbar/toolbar";
+import { FormulaBar } from '@/components/formula-bar/formula-bar';
+import Grid from '@/components/grid/grid';
+import { Toolbar } from '@/components/toolbar/toolbar';
 import {
   calculateAverage,
   calculateCount,
   calculateMax,
   calculateMin,
   calculateSum,
-} from "@/lib/actions/mathOperations";
-import { useCallback, useState } from "react";
+} from '@/lib/actions/mathOperations';
+import { useCallback, useState } from 'react';
 import {
   type CellData,
   type CellPosition,
@@ -20,7 +20,7 @@ import {
   type SpreadsheetData,
   getCellKey,
   getDefaultCellData,
-} from "./types";
+} from './types';
 
 // Helper function to parse cell references (e.g., "A1" to {row: 0, col: 0})
 const parseCellReference = (ref: string) => {
@@ -47,18 +47,14 @@ const parseRange = (range: string): CellRange | null => {
 export function Spreadsheet() {
   const [selection, setSelection] = useState<SelectionState>({
     ranges: [{ start: { row: 0, col: 0 }, end: { row: 0, col: 0 } }],
-    activeCell: { row: 0, col: 0 }
+    activeCell: { row: 0, col: 0 },
   });
   const [editingCell, setEditingCell] = useState<CellPosition | null>(null);
-  const [spreadsheetData, setSpreadsheetData] = useState<SpreadsheetData>(
-    new Map()
-  );
+  const [spreadsheetData, setSpreadsheetData] = useState<SpreadsheetData>(new Map());
 
   const getCurrentCellData = useCallback((): CellData | null => {
     if (!selection.activeCell) return null;
-    return (
-      spreadsheetData.get(getCellKey(selection.activeCell)) || getDefaultCellData()
-    );
+    return spreadsheetData.get(getCellKey(selection.activeCell)) || getDefaultCellData();
   }, [selection.activeCell, spreadsheetData]);
 
   const updateCellData = useCallback(
@@ -122,7 +118,7 @@ export function Spreadsheet() {
   }, [getCurrentCellData, updateCellData]);
 
   const handleAlign = useCallback(
-    (alignment: "left" | "center" | "right") => {
+    (alignment: 'left' | 'center' | 'right') => {
       const currentData = getCurrentCellData();
       if (!currentData) return;
       // Apply alignment to all selected cells
@@ -133,51 +129,57 @@ export function Spreadsheet() {
     [getCurrentCellData, updateCellData]
   );
 
-  const handleCellSelect = useCallback((row: number, col: number, event?: React.MouseEvent) => {
-    const newCell: CellPosition = { row, col };
-    
-    if (!event) {
-      // Handle keyboard navigation or direct selection
-      setSelection({
-        ranges: [{ start: newCell, end: newCell }],
-        activeCell: newCell
-      });
-      return;
-    }
+  const handleCellSelect = useCallback(
+    (row: number, col: number, event?: React.MouseEvent) => {
+      const newCell: CellPosition = { row, col };
 
-    if (event.shiftKey && selection.activeCell) {
-      // Extend the current selection range
-      const lastRange = selection.ranges[selection.ranges.length - 1];
-      const updatedRanges = [...selection.ranges.slice(0, -1), {
-        start: lastRange.start,
-        end: newCell
-      }];
-      
-      setSelection({
-        ranges: updatedRanges,
-        activeCell: selection.activeCell
-      });
-    } else if ((event.metaKey || event.ctrlKey) && selection.ranges.length > 0) {
-      // Add a new selection range
-      setSelection({
-        ranges: [...selection.ranges, { start: newCell, end: newCell }],
-        activeCell: newCell
-      });
-    } else {
-      // Start a new selection
-      setSelection({
-        ranges: [{ start: newCell, end: newCell }],
-        activeCell: newCell
-      });
-    }
-  }, [selection]);
+      if (!event) {
+        // Handle keyboard navigation or direct selection
+        setSelection({
+          ranges: [{ start: newCell, end: newCell }],
+          activeCell: newCell,
+        });
+        return;
+      }
+
+      if (event.shiftKey && selection.activeCell) {
+        // Extend the current selection range
+        const lastRange = selection.ranges[selection.ranges.length - 1];
+        const updatedRanges = [
+          ...selection.ranges.slice(0, -1),
+          {
+            start: lastRange.start,
+            end: newCell,
+          },
+        ];
+
+        setSelection({
+          ranges: updatedRanges,
+          activeCell: selection.activeCell,
+        });
+      } else if ((event.metaKey || event.ctrlKey) && selection.ranges.length > 0) {
+        // Add a new selection range
+        setSelection({
+          ranges: [...selection.ranges, { start: newCell, end: newCell }],
+          activeCell: newCell,
+        });
+      } else {
+        // Start a new selection
+        setSelection({
+          ranges: [{ start: newCell, end: newCell }],
+          activeCell: newCell,
+        });
+      }
+    },
+    [selection]
+  );
 
   const handleStartEdit = useCallback((row: number, col: number) => {
     const cellPosition = { row, col };
     setEditingCell(cellPosition);
     setSelection({
       ranges: [{ start: cellPosition, end: cellPosition }],
-      activeCell: cellPosition
+      activeCell: cellPosition,
     });
   }, []);
 
@@ -185,65 +187,80 @@ export function Spreadsheet() {
     setEditingCell(null);
   }, []);
 
-  const evaluateFormula = useCallback(async (formula: string): Promise<string> => {
-    // Remove the leading '=' and any whitespace
-    const expression = formula.slice(1).trim().toUpperCase();
-    
-    // Match function pattern: FUNCTION(range)
-    const match = expression.match(/^(SUM|AVERAGE|MAX|MIN|COUNT)\((.*)\)$/);
-    if (!match) return '#SYNTAX_ERROR';
-    
-    const [, func, rangeStr] = match as [string, 'SUM' | 'AVERAGE' | 'MAX' | 'MIN' | 'COUNT', string];
-    const range = parseRange(rangeStr);
-    if (!range) return '#RANGE_ERROR';
+  const evaluateFormula = useCallback(
+    async (formula: string): Promise<string> => {
+      // Remove the leading '=' and any whitespace
+      const expression = formula.slice(1).trim().toUpperCase();
 
-    // Convert spreadsheetData to 2D array format required by math operations
-    const maxRow = Math.max(...Array.from(spreadsheetData.keys()).map(key => Number.parseInt(key.split('-')[0], 10)));
-    const maxCol = Math.max(...Array.from(spreadsheetData.keys()).map(key => Number.parseInt(key.split('-')[1], 10)));
-    
-    const values: CellValue[][] = Array(maxRow + 1).fill(null).map(() => 
-      Array(maxCol + 1).fill(null).map(() => ({ raw: '' }))
-    );
+      // Match function pattern: FUNCTION(range)
+      const match = expression.match(/^(SUM|AVERAGE|MAX|MIN|COUNT)\((.*)\)$/);
+      if (!match) return '#SYNTAX_ERROR';
 
-    // Fill the values array with actual data
-    for (const [key, value] of spreadsheetData.entries()) {
-      const [row, col] = key.split('-').map(n => Number.parseInt(n, 10));
-      values[row][col] = {
-        raw: value.value,
-        computed: Number.parseFloat(value.value) || undefined
-      };
-    }
+      const [, func, rangeStr] = match as [
+        string,
+        'SUM' | 'AVERAGE' | 'MAX' | 'MIN' | 'COUNT',
+        string,
+      ];
+      const range = parseRange(rangeStr);
+      if (!range) return '#RANGE_ERROR';
 
-    try {
-      let result;
-      switch (func) {
-        case 'SUM':
-          result = await calculateSum(range, values);
-          break;
-        case 'AVERAGE':
-          result = await calculateAverage(range, values);
-          break;
-        case 'MAX':
-          result = await calculateMax(range, values);
-          break;
-        case 'MIN':
-          result = await calculateMin(range, values);
-          break;
-        case 'COUNT':
-          result = await calculateCount(range, values);
-          break;
-        default:
-          return '#FUNCTION_ERROR';
+      // Convert spreadsheetData to 2D array format required by math operations
+      const maxRow = Math.max(
+        ...Array.from(spreadsheetData.keys()).map((key) => Number.parseInt(key.split('-')[0], 10))
+      );
+      const maxCol = Math.max(
+        ...Array.from(spreadsheetData.keys()).map((key) => Number.parseInt(key.split('-')[1], 10))
+      );
+
+      const values: CellValue[][] = Array(maxRow + 1)
+        .fill(null)
+        .map(() =>
+          Array(maxCol + 1)
+            .fill(null)
+            .map(() => ({ raw: '' }))
+        );
+
+      // Fill the values array with actual data
+      for (const [key, value] of spreadsheetData.entries()) {
+        const [row, col] = key.split('-').map((n) => Number.parseInt(n, 10));
+        values[row][col] = {
+          raw: value.value,
+          computed: Number.parseFloat(value.value) || undefined,
+        };
       }
 
-      if (result.error) {
-        return `#${result.error.type}`;
+      try {
+        let result;
+        switch (func) {
+          case 'SUM':
+            result = await calculateSum(range, values);
+            break;
+          case 'AVERAGE':
+            result = await calculateAverage(range, values);
+            break;
+          case 'MAX':
+            result = await calculateMax(range, values);
+            break;
+          case 'MIN':
+            result = await calculateMin(range, values);
+            break;
+          case 'COUNT':
+            result = await calculateCount(range, values);
+            break;
+          default:
+            return '#FUNCTION_ERROR';
+        }
+
+        if (result.error) {
+          return `#${result.error.type}`;
+        }
+        return result.value?.toString() || '#VALUE_ERROR';
+      } catch {
+        return '#ERROR';
       }
-      return result.value?.toString() || '#VALUE_ERROR';
-    } catch {
-      return '#ERROR';
-    }
-  }, [spreadsheetData]);
+    },
+    [spreadsheetData]
+  );
 
   const handleCellChange = useCallback(
     async (row: number, col: number, value: string) => {
@@ -294,13 +311,13 @@ export function Spreadsheet() {
         onBold={handleBold}
         onItalic={handleItalic}
         onUnderline={handleUnderline}
-        onAlignLeft={() => handleAlign("left")}
-        onAlignCenter={() => handleAlign("center")}
-        onAlignRight={() => handleAlign("right")}
+        onAlignLeft={() => handleAlign('left')}
+        onAlignCenter={() => handleAlign('center')}
+        onAlignRight={() => handleAlign('right')}
       />
       <FormulaBar
         selectedCell={selection.activeCell}
-        value={currentCellData?.formula || currentCellData?.value || ""}
+        value={currentCellData?.formula || currentCellData?.value || ''}
         onChange={handleFormulaChange}
         selection={selection}
         onRangeChange={handleFormulaRangeChange}

@@ -1,14 +1,22 @@
-"use client";
+'use client';
 
-import { Spreadsheet } from "@/components/spreadsheet/spreadsheet";
-import { useState } from "react";
+import { Spreadsheet } from '@/components/spreadsheet/spreadsheet';
+import { useState } from 'react';
 
 export default function TestSpreadsheetPage() {
-  const [testResults, setTestResults] = useState<Array<{id: string; name: string; passed: boolean; expected: string; actual: string}>>([]);
-  
+  const [testResults, setTestResults] = useState<
+    Array<{ id: string; name: string; passed: boolean; expected: string; actual: string }>
+  >([]);
+
   const runTests = async () => {
-    const results: Array<{id: string; name: string; passed: boolean; expected: string; actual: string}> = [];
-    
+    const results: Array<{
+      id: string;
+      name: string;
+      passed: boolean;
+      expected: string;
+      actual: string;
+    }> = [];
+
     // Helper to add test result
     const addResult = (id: string, name: string, expected: string, actual: string) => {
       results.push({
@@ -16,7 +24,7 @@ export default function TestSpreadsheetPage() {
         name,
         passed: expected === actual,
         expected,
-        actual
+        actual,
       });
     };
 
@@ -27,28 +35,28 @@ export default function TestSpreadsheetPage() {
       '60',
       document.querySelector('[data-cell="C1"]')?.textContent || 'Not found'
     );
-    
+
     addResult(
       'average-basic',
       'Basic AVERAGE',
       '20',
       document.querySelector('[data-cell="C2"]')?.textContent || 'Not found'
     );
-    
+
     addResult(
       'max-combined',
       'MAX of multiple ranges',
       '30',
       document.querySelector('[data-cell="C3"]')?.textContent || 'Not found'
     );
-    
+
     addResult(
       'min-combined',
       'MIN of multiple ranges',
       '5',
       document.querySelector('[data-cell="C4"]')?.textContent || 'Not found'
     );
-    
+
     addResult(
       'count-basic',
       'COUNT of range',
@@ -63,21 +71,21 @@ export default function TestSpreadsheetPage() {
       '#VALUE_ERROR',
       document.querySelector('[data-cell="D1"]')?.textContent || 'Not found'
     );
-    
+
     addResult(
       'average-error',
       'AVERAGE with syntax error',
       '#SYNTAX_ERROR',
       document.querySelector('[data-cell="D2"]')?.textContent || 'Not found'
     );
-    
+
     addResult(
       'max-error',
       'MAX with invalid reference',
       '#RANGE_ERROR',
       document.querySelector('[data-cell="D3"]')?.textContent || 'Not found'
     );
-    
+
     setTestResults(results);
   };
 
@@ -85,11 +93,10 @@ export default function TestSpreadsheetPage() {
     <div className="p-4">
       <div className="mb-4">
         <h1 className="text-2xl font-bold mb-2">Spreadsheet Formula Testing</h1>
-        <p className="text-gray-600 mb-4">
-          Follow these steps to test the mathematical functions:
-        </p>
+        <p className="text-gray-600 mb-4">Follow these steps to test the mathematical functions:</p>
         <ol className="list-decimal ml-6 mb-4 space-y-2">
-          <li>Enter the following test data:
+          <li>
+            Enter the following test data:
             <ul className="list-disc ml-6 mt-1">
               <li>A1: 10</li>
               <li>A2: 20</li>
@@ -99,7 +106,8 @@ export default function TestSpreadsheetPage() {
               <li>B3: 25</li>
             </ul>
           </li>
-          <li>Try these formulas:
+          <li>
+            Try these formulas:
             <ul className="list-disc ml-6 mt-1">
               <li>C1: =SUM(A1:A3) [Expected: 60]</li>
               <li>C2: =AVERAGE(A1:A3) [Expected: 20]</li>
@@ -108,7 +116,8 @@ export default function TestSpreadsheetPage() {
               <li>C5: =COUNT(A1:B3) [Expected: 6]</li>
             </ul>
           </li>
-          <li>Test error handling:
+          <li>
+            Test error handling:
             <ul className="list-disc ml-6 mt-1">
               <li>D1: =SUM(X1:X5) [Expected: #VALUE_ERROR]</li>
               <li>D2: =AVERAGE() [Expected: #SYNTAX_ERROR]</li>
@@ -136,12 +145,10 @@ export default function TestSpreadsheetPage() {
             {testResults.map((result) => (
               <div
                 key={result.id}
-                className={`p-2 rounded ${
-                  result.passed ? "bg-green-100" : "bg-red-100"
-                }`}
+                className={`p-2 rounded ${result.passed ? 'bg-green-100' : 'bg-red-100'}`}
               >
                 <div className="font-medium">
-                  {result.name}: {result.passed ? "✅ Passed" : "❌ Failed"}
+                  {result.name}: {result.passed ? '✅ Passed' : '❌ Failed'}
                 </div>
                 {!result.passed && (
                   <div className="text-sm text-gray-600">
@@ -152,9 +159,11 @@ export default function TestSpreadsheetPage() {
             ))}
           </div>
         ) : (
-          <p className="text-gray-600">Enter the test data and formulas above, then click "Run Tests" to see results.</p>
+          <p className="text-gray-600">
+            Enter the test data and formulas above, then click &quot;Run Tests&quot; to see results.
+          </p>
         )}
       </div>
     </div>
   );
-} 
+}

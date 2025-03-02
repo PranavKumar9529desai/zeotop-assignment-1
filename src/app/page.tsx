@@ -12,11 +12,13 @@ export const revalidate = 3600; // Revalidate every hour if needed
 export default function Home() {
   return (
     <main className="flex flex-col h-screen bg-gray-50">
-      <Suspense fallback={
-        <div className="flex items-center justify-center h-screen">
-          <div className="animate-pulse text-gray-600">Loading spreadsheet...</div>
-        </div>
-      }>
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center h-screen">
+            <div className="animate-pulse text-gray-600">Loading spreadsheet...</div>
+          </div>
+        }
+      >
         <Spreadsheet />
       </Suspense>
     </main>
