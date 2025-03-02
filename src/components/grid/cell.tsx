@@ -31,7 +31,7 @@ export default function Cell({
   const inputRef = useRef<HTMLInputElement>(null);
   const cellRef = useRef<HTMLTableCellElement>(null);
   const [localValue, setLocalValue] = useState(() => data.formula || data.value || '');
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
     setLocalValue(data.formula || data.value || '');

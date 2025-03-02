@@ -10,10 +10,11 @@ const validateRange = (range: CellRange, values: CellValue[][]): CalculationResu
         type: 'RANGE_ERROR',
         message: 'Invalid range: Row out of bounds',
       },
+      numericValues: [],
     };
   }
 
-  const numericValues = [];
+  const numericValues: number[] = [];
   for (let i = range.start.row; i <= range.end.row; i++) {
     for (let j = range.start.col; j <= range.end.col; j++) {
       const value = values[i]?.[j]?.computed;
@@ -33,7 +34,7 @@ export async function calculateSum(
   const validation = validateRange(range, values);
   if (validation.error) return validation;
 
-  const sum = validation.numericValues.reduce((acc, val) => acc + val, 0);
+  const sum = (validation.numericValues || []).reduce((acc, val) => acc + val, 0);
   return { value: sum };
 }
 
@@ -44,7 +45,8 @@ export async function calculateAverage(
   const validation = validateRange(range, values);
   if (validation.error) return validation;
 
-  if (validation.numericValues.length === 0) {
+  const numericValues = validation.numericValues || [];
+  if (numericValues.length === 0) {
     return {
       value: null,
       error: {
@@ -54,8 +56,8 @@ export async function calculateAverage(
     };
   }
 
-  const sum = validation.numericValues.reduce((acc, val) => acc + val, 0);
-  return { value: sum / validation.numericValues.length };
+  const sum = numericValues.reduce((acc, val) => acc + val, 0);
+  return { value: sum / numericValues.length };
 }
 
 export async function calculateMax(
@@ -65,7 +67,8 @@ export async function calculateMax(
   const validation = validateRange(range, values);
   if (validation.error) return validation;
 
-  if (validation.numericValues.length === 0) {
+  const numericValues = validation.numericValues || [];
+  if (numericValues.length === 0) {
     return {
       value: null,
       error: {
@@ -75,7 +78,7 @@ export async function calculateMax(
     };
   }
 
-  return { value: Math.max(...validation.numericValues) };
+  return { value: Math.max(...numericValues) };
 }
 
 export async function calculateMin(
@@ -85,7 +88,8 @@ export async function calculateMin(
   const validation = validateRange(range, values);
   if (validation.error) return validation;
 
-  if (validation.numericValues.length === 0) {
+  const numericValues = validation.numericValues || [];
+  if (numericValues.length === 0) {
     return {
       value: null,
       error: {
@@ -95,7 +99,7 @@ export async function calculateMin(
     };
   }
 
-  return { value: Math.min(...validation.numericValues) };
+  return { value: Math.min(...numericValues) };
 }
 
 export async function calculateCount(
@@ -105,5 +109,6 @@ export async function calculateCount(
   const validation = validateRange(range, values);
   if (validation.error) return validation;
 
-  return { value: validation.numericValues.length };
+  const numericValues = validation.numericValues || [];
+  return { value: numericValues.length };
 }

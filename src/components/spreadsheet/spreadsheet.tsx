@@ -232,7 +232,7 @@ export function Spreadsheet() {
       }
 
       try {
-        let result: { error?: { type: string }; value?: number | string };
+        let result: { error?: { type: string }; value?: number | string | null };
         switch (func) {
           case 'SUM':
             result = await calculateSum(range, values);
@@ -378,12 +378,12 @@ export function Spreadsheet() {
     let minCol = Number.POSITIVE_INFINITY;
     let maxCol = Number.NEGATIVE_INFINITY;
 
-    selection.ranges.forEach((range) => {
+    for (const range of selection.ranges) {
       minRow = Math.min(minRow, range.start.row, range.end.row);
       maxRow = Math.max(maxRow, range.start.row, range.end.row);
       minCol = Math.min(minCol, range.start.col, range.end.col);
       maxCol = Math.max(maxCol, range.start.col, range.end.col);
-    });
+    }
 
     return {
       startRow: minRow,
