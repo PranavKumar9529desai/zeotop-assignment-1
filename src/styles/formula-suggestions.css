@@ -1,0 +1,11 @@
+.tippy-box {
+  border-radius: 0 !important;
+  background-color: white !important;
+  color: inherit !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+.tippy-arrow {
+  display: none !important;
+} 
