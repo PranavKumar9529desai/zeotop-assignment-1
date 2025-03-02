@@ -17,6 +17,8 @@
   --spreadsheet-hover-bg: #f9fafb;
   --spreadsheet-header-highlight-bg: #e5e7eb;
   --spreadsheet-header-highlight-text: #1f2937;
+  --spreadsheet-header-active-bg: #dbeafe;
+  --spreadsheet-header-active-text: #1e40af;
   /* Text Colors */
   --spreadsheet-text-primary: #111827;
   --spreadsheet-text-secondary: #374151;
@@ -43,6 +45,10 @@ body {
 
 .spreadsheet-header-highlight {
   @apply bg-[var(--spreadsheet-header-highlight-bg)] text-[var(--spreadsheet-header-highlight-text)] font-semibold;
+}
+
+.spreadsheet-header-active {
+  @apply bg-[var(--spreadsheet-header-active-bg)] text-[var(--spreadsheet-header-active-text)] font-bold;
 }
 
 .spreadsheet-cell {

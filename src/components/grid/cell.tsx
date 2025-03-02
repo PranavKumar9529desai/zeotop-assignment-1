@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { CellData, CellStyle } from "../spreadsheet/types";
+import type { CellData } from "../spreadsheet/types";
 
 interface CellProps {
   row: number;
   col: number;
   isSelected: boolean;
   data: CellData;
-  onSelect: (row: number, col: number) => void;
+  onSelect: (row: number, col: number, event?: React.MouseEvent) => void;
   onChange: (value: string) => void;
   isEditing: boolean;
   onStartEdit: () => void;
@@ -65,8 +65,8 @@ export default function Cell({
     };
   }, []);
 
-  const handleClick = () => {
-    onSelect(row, col);
+  const handleClick = (event: React.MouseEvent) => {
+    onSelect(row, col, event);
   };
 
   const handleDoubleClick = () => {
@@ -89,28 +89,66 @@ export default function Cell({
       onStopEdit();
     } else if (!isEditing) {
       // Navigation when not editing
+      const moveAmount = e.shiftKey ? 5 : 1; // Move 5 cells at a time with Shift
+      
       switch (e.key) {
         case "ArrowUp":
           e.preventDefault();
-          if (row > 0) onSelect(row - 1, col);
+          if (row >= moveAmount) {
+            onSelect(row - moveAmount, col);
+          } else {
+            onSelect(0, col); // Move to first row
+          }
           break;
         case "ArrowDown":
           e.preventDefault();
-          onSelect(row + 1, col);
+          onSelect(row + moveAmount, col);
           break;
         case "ArrowLeft":
           e.preventDefault();
-          if (col > 0) onSelect(row, col - 1);
+          if (col >= moveAmount) {
+            onSelect(row, col - moveAmount);
+          } else {
+            onSelect(row, 0); // Move to first column
+          }
           break;
         case "ArrowRight":
           e.preventDefault();
-          onSelect(row, col + 1);
+          onSelect(row, col + moveAmount);
+          break;
+        case "Home":
+          e.preventDefault();
+          if (e.ctrlKey || e.metaKey) {
+            onSelect(0, 0); // Move to first cell
+          } else {
+            onSelect(row, 0); // Move to start of row
+          }
+          break;
+        case "End":
+          e.preventDefault();
+          if (e.ctrlKey || e.metaKey) {
+            onSelect(99, 25); // Move to last cell (assuming 100 rows, 26 columns)
+          } else {
+            onSelect(row, 25); // Move to end of row
+          }
+          break;
+        case "PageUp":
+          e.preventDefault();
+          if (row >= 10) {
+            onSelect(row - 10, col);
+          } else {
+            onSelect(0, col);
+          }
+          break;
+        case "PageDown":
+          e.preventDefault();
+          onSelect(row + 10, col);
           break;
       }
     }
   };
 
-  const getCellStyles = (styles: CellStyle): string => {
+  const getCellStyles = (styles: CellData["styles"]): string => {
     const classNames = ["w-full h-full px-1 overflow-hidden text-sm leading-8 text-[var(--spreadsheet-text-primary)]"];
 
     if (styles.bold) classNames.push("font-bold");

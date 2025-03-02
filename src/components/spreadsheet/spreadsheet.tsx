@@ -6,42 +6,42 @@ import { Toolbar } from "@/components/toolbar/toolbar";
 import { useCallback, useState } from "react";
 import {
   type CellData,
+  type CellPosition,
+  type CellRange,
+  type SelectionState,
   type SpreadsheetData,
   getCellKey,
   getDefaultCellData,
 } from "./types";
 
 export function Spreadsheet() {
-  const [selectedCell, setSelectedCell] = useState<{
-    row: number;
-    col: number;
-  } | null>(null);
-  const [editingCell, setEditingCell] = useState<{
-    row: number;
-    col: number;
-  } | null>(null);
+  const [selection, setSelection] = useState<SelectionState>({
+    ranges: [{ start: { row: 0, col: 0 }, end: { row: 0, col: 0 } }],
+    activeCell: { row: 0, col: 0 }
+  });
+  const [editingCell, setEditingCell] = useState<CellPosition | null>(null);
   const [spreadsheetData, setSpreadsheetData] = useState<SpreadsheetData>(
     new Map()
   );
 
   const getCurrentCellData = useCallback((): CellData | null => {
-    if (!selectedCell) return null;
+    if (!selection.activeCell) return null;
     return (
-      spreadsheetData.get(getCellKey(selectedCell)) || getDefaultCellData()
+      spreadsheetData.get(getCellKey(selection.activeCell)) || getDefaultCellData()
     );
-  }, [selectedCell, spreadsheetData]);
+  }, [selection.activeCell, spreadsheetData]);
 
   const updateCellData = useCallback(
     (newData: Partial<CellData>) => {
-      if (!selectedCell) return;
+      if (!selection.activeCell) return;
 
-      const cellKey = getCellKey(selectedCell);
+      const cellKey = getCellKey(selection.activeCell);
       const currentData = spreadsheetData.get(cellKey) || getDefaultCellData();
       const updatedData = { ...currentData, ...newData };
 
       setSpreadsheetData(new Map(spreadsheetData).set(cellKey, updatedData));
     },
-    [selectedCell, spreadsheetData]
+    [selection.activeCell, spreadsheetData]
   );
 
   const handleBold = useCallback(() => {
@@ -82,12 +82,52 @@ export function Spreadsheet() {
     [getCurrentCellData, updateCellData]
   );
 
-  const handleCellSelect = useCallback((row: number, col: number) => {
-    setSelectedCell({ row, col });
-  }, []);
+  const handleCellSelect = useCallback((row: number, col: number, event?: React.MouseEvent) => {
+    const newCell: CellPosition = { row, col };
+    
+    if (!event) {
+      // Handle keyboard navigation or direct selection
+      setSelection({
+        ranges: [{ start: newCell, end: newCell }],
+        activeCell: newCell
+      });
+      return;
+    }
+
+    if (event.shiftKey && selection.activeCell) {
+      // Extend the current selection range
+      const lastRange = selection.ranges[selection.ranges.length - 1];
+      const updatedRanges = [...selection.ranges.slice(0, -1), {
+        start: lastRange.start,
+        end: newCell
+      }];
+      
+      setSelection({
+        ranges: updatedRanges,
+        activeCell: selection.activeCell
+      });
+    } else if ((event.metaKey || event.ctrlKey) && selection.ranges.length > 0) {
+      // Add a new selection range
+      setSelection({
+        ranges: [...selection.ranges, { start: newCell, end: newCell }],
+        activeCell: newCell
+      });
+    } else {
+      // Start a new selection
+      setSelection({
+        ranges: [{ start: newCell, end: newCell }],
+        activeCell: newCell
+      });
+    }
+  }, [selection]);
 
   const handleStartEdit = useCallback((row: number, col: number) => {
-    setEditingCell({ row, col });
+    const cellPosition = { row, col };
+    setEditingCell(cellPosition);
+    setSelection({
+      ranges: [{ start: cellPosition, end: cellPosition }],
+      activeCell: cellPosition
+    });
   }, []);
 
   const handleStopEdit = useCallback(() => {
@@ -112,11 +152,15 @@ export function Spreadsheet() {
 
   const handleFormulaChange = useCallback(
     (value: string) => {
-      if (!selectedCell) return;
-      handleCellChange(selectedCell.row, selectedCell.col, value);
+      if (!selection.activeCell) return;
+      handleCellChange(selection.activeCell.row, selection.activeCell.col, value);
     },
-    [selectedCell, handleCellChange]
+    [selection.activeCell, handleCellChange]
   );
+
+  const handleFormulaRangeChange = useCallback((selection: SelectionState) => {
+    setSelection(selection);
+  }, []);
 
   const currentCellData = getCurrentCellData();
 
@@ -131,14 +175,17 @@ export function Spreadsheet() {
         onAlignRight={() => handleAlign("right")}
       />
       <FormulaBar
-        selectedCell={selectedCell}
+        selectedCell={selection.activeCell}
         value={currentCellData?.formula || currentCellData?.value || ""}
         onChange={handleFormulaChange}
+        selection={selection}
+        onRangeChange={handleFormulaRangeChange}
       />
       <div className="flex-1 overflow-hidden">
         <Grid
           data={spreadsheetData}
-          selectedCell={selectedCell}
+          selection={selection}
+          setSelection={setSelection}
           editingCell={editingCell}
           onCellSelect={handleCellSelect}
           onCellChange={handleCellChange}
