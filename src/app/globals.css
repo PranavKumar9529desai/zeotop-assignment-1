@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  /* Spreadsheet Theme Colors */
+  --spreadsheet-header-bg: #f3f4f6;
+  --spreadsheet-header-text: #4b5563;
+  --spreadsheet-border: #e5e7eb;
+  --spreadsheet-cell-bg: #ffffff;
+  --spreadsheet-cell-text: #111827;
+  --spreadsheet-selected-cell-bg: #ebf5ff;
+  --spreadsheet-hover-bg: #f9fafb;
+  --spreadsheet-header-highlight-bg: #e5e7eb;
+  --spreadsheet-header-highlight-text: #1f2937;
+  --spreadsheet-input-text: #111827;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --spreadsheet-cell-text: #f3f4f6;
+    --spreadsheet-input-text: #f3f4f6;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Custom classes for spreadsheet */
+.spreadsheet-header {
+  @apply sticky bg-[var(--spreadsheet-header-bg)] text-[var(--spreadsheet-header-text)] font-medium border-[var(--spreadsheet-border)];
+}
+
+.spreadsheet-header-highlight {
+  @apply bg-[var(--spreadsheet-header-highlight-bg)] text-[var(--spreadsheet-header-highlight-text)] font-semibold;
+}
+
+.spreadsheet-cell {
+  @apply bg-[var(--spreadsheet-cell-bg)] text-[var(--spreadsheet-cell-text)] border-[var(--spreadsheet-border)] hover:bg-[var(--spreadsheet-hover-bg)];
+}
+
+.spreadsheet-selected {
+  @apply bg-[var(--spreadsheet-selected-cell-bg)];
+}
+
+.spreadsheet-input {
+  @apply text-[var(--spreadsheet-input-text)] bg-[var(--spreadsheet-cell-bg)];
+}
