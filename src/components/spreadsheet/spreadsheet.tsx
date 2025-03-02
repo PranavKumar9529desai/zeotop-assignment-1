@@ -35,18 +35,36 @@ export function Spreadsheet() {
     (newData: Partial<CellData>) => {
       if (!selection.activeCell) return;
 
-      const cellKey = getCellKey(selection.activeCell);
-      const currentData = spreadsheetData.get(cellKey) || getDefaultCellData();
-      const updatedData = { ...currentData, ...newData };
+      // Create a new Map to store the updated data
+      const newSpreadsheetData = new Map(spreadsheetData);
 
-      setSpreadsheetData(new Map(spreadsheetData).set(cellKey, updatedData));
+      // Apply the style changes to all selected cells
+      for (const range of selection.ranges) {
+        const minRow = Math.min(range.start.row, range.end.row);
+        const maxRow = Math.max(range.start.row, range.end.row);
+        const minCol = Math.min(range.start.col, range.end.col);
+        const maxCol = Math.max(range.start.col, range.end.col);
+
+        // Iterate through all cells in the range
+        for (let row = minRow; row <= maxRow; row++) {
+          for (let col = minCol; col <= maxCol; col++) {
+            const cellKey = getCellKey({ row, col });
+            const currentData = spreadsheetData.get(cellKey) || getDefaultCellData();
+            const updatedData = { ...currentData, ...newData };
+            newSpreadsheetData.set(cellKey, updatedData);
+          }
+        }
+      }
+
+      setSpreadsheetData(newSpreadsheetData);
     },
-    [selection.activeCell, spreadsheetData]
+    [selection.ranges, selection.activeCell, spreadsheetData]
   );
 
   const handleBold = useCallback(() => {
     const currentData = getCurrentCellData();
     if (!currentData) return;
+    // Toggle bold for all selected cells
     updateCellData({
       styles: { ...currentData.styles, bold: !currentData.styles.bold },
     });
@@ -55,6 +73,7 @@ export function Spreadsheet() {
   const handleItalic = useCallback(() => {
     const currentData = getCurrentCellData();
     if (!currentData) return;
+    // Toggle italic for all selected cells
     updateCellData({
       styles: { ...currentData.styles, italic: !currentData.styles.italic },
     });
@@ -63,6 +82,7 @@ export function Spreadsheet() {
   const handleUnderline = useCallback(() => {
     const currentData = getCurrentCellData();
     if (!currentData) return;
+    // Toggle underline for all selected cells
     updateCellData({
       styles: {
         ...currentData.styles,
@@ -75,6 +95,7 @@ export function Spreadsheet() {
     (alignment: "left" | "center" | "right") => {
       const currentData = getCurrentCellData();
       if (!currentData) return;
+      // Apply alignment to all selected cells
       updateCellData({
         styles: { ...currentData.styles, align: alignment },
       });
