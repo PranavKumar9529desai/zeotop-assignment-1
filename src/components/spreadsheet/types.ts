@@ -28,6 +28,12 @@ export interface SelectionState {
 
 export type SpreadsheetData = Map<string, CellData>;
 
+export type CellValue = {
+  raw: string;
+  computed?: number;
+  formula?: string;
+};
+
 export function getCellKey(position: CellPosition): string {
   return `${position.row}-${position.col}`;
 }

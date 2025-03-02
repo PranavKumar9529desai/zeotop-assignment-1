@@ -16,7 +16,13 @@ export type FormulaError = {
   type: 'RANGE_ERROR' | 'VALUE_ERROR' | 'SYNTAX_ERROR';
 };
 
+export type CalculationError = {
+  type: "RANGE_ERROR" | "VALUE_ERROR" | "FORMULA_ERROR";
+  message: string;
+};
+
 export type CalculationResult = {
   value: number | null;
-  error?: FormulaError;
+  error?: CalculationError;
+  numericValues?: number[];
 }; 

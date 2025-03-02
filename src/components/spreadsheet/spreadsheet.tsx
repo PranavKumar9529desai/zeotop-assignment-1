@@ -3,16 +3,46 @@
 import { FormulaBar } from "@/components/formula-bar/formula-bar";
 import Grid from "@/components/grid/grid";
 import { Toolbar } from "@/components/toolbar/toolbar";
+import {
+  calculateAverage,
+  calculateCount,
+  calculateMax,
+  calculateMin,
+  calculateSum,
+} from "@/lib/actions/mathOperations";
 import { useCallback, useState } from "react";
 import {
   type CellData,
   type CellPosition,
   type CellRange,
+  type CellValue,
   type SelectionState,
   type SpreadsheetData,
   getCellKey,
   getDefaultCellData,
 } from "./types";
+
+// Helper function to parse cell references (e.g., "A1" to {row: 0, col: 0})
+const parseCellReference = (ref: string) => {
+  const match = ref.match(/([A-Z]+)(\d+)/);
+  if (!match) return null;
+
+  const col = match[1].split('').reduce((acc, char) => acc * 26 + char.charCodeAt(0) - 64, 0) - 1;
+  const row = Number.parseInt(match[2], 10) - 1;
+  return { row, col };
+};
+
+// Helper function to parse range (e.g., "A1:B3")
+const parseRange = (range: string): CellRange | null => {
+  const [start, end] = range.split(':');
+  if (!start || !end) return null;
+
+  const startPos = parseCellReference(start);
+  const endPos = parseCellReference(end);
+  if (!startPos || !endPos) return null;
+
+  return { start: startPos, end: endPos };
+};
 
 export function Spreadsheet() {
   const [selection, setSelection] = useState<SelectionState>({
@@ -155,20 +185,93 @@ export function Spreadsheet() {
     setEditingCell(null);
   }, []);
 
+  const evaluateFormula = useCallback(async (formula: string): Promise<string> => {
+    // Remove the leading '=' and any whitespace
+    const expression = formula.slice(1).trim().toUpperCase();
+    
+    // Match function pattern: FUNCTION(range)
+    const match = expression.match(/^(SUM|AVERAGE|MAX|MIN|COUNT)\((.*)\)$/);
+    if (!match) return '#SYNTAX_ERROR';
+    
+    const [, func, rangeStr] = match as [string, 'SUM' | 'AVERAGE' | 'MAX' | 'MIN' | 'COUNT', string];
+    const range = parseRange(rangeStr);
+    if (!range) return '#RANGE_ERROR';
+
+    // Convert spreadsheetData to 2D array format required by math operations
+    const maxRow = Math.max(...Array.from(spreadsheetData.keys()).map(key => Number.parseInt(key.split('-')[0], 10)));
+    const maxCol = Math.max(...Array.from(spreadsheetData.keys()).map(key => Number.parseInt(key.split('-')[1], 10)));
+    
+    const values: CellValue[][] = Array(maxRow + 1).fill(null).map(() => 
+      Array(maxCol + 1).fill(null).map(() => ({ raw: '' }))
+    );
+
+    // Fill the values array with actual data
+    for (const [key, value] of spreadsheetData.entries()) {
+      const [row, col] = key.split('-').map(n => Number.parseInt(n, 10));
+      values[row][col] = {
+        raw: value.value,
+        computed: Number.parseFloat(value.value) || undefined
+      };
+    }
+
+    try {
+      let result;
+      switch (func) {
+        case 'SUM':
+          result = await calculateSum(range, values);
+          break;
+        case 'AVERAGE':
+          result = await calculateAverage(range, values);
+          break;
+        case 'MAX':
+          result = await calculateMax(range, values);
+          break;
+        case 'MIN':
+          result = await calculateMin(range, values);
+          break;
+        case 'COUNT':
+          result = await calculateCount(range, values);
+          break;
+        default:
+          return '#FUNCTION_ERROR';
+      }
+
+      if (result.error) {
+        return `#${result.error.type}`;
+      }
+      return result.value?.toString() || '#VALUE_ERROR';
+    } catch {
+      return '#ERROR';
+    }
+  }, [spreadsheetData]);
+
   const handleCellChange = useCallback(
-    (row: number, col: number, value: string) => {
+    async (row: number, col: number, value: string) => {
       const cellKey = getCellKey({ row, col });
       const currentData = spreadsheetData.get(cellKey) || getDefaultCellData();
 
-      setSpreadsheetData(
-        new Map(spreadsheetData).set(cellKey, {
-          ...currentData,
-          value,
-          formula: value.startsWith("=") ? value : undefined,
-        })
-      );
+      if (value.startsWith('=')) {
+        // Handle formula
+        const result = await evaluateFormula(value);
+        setSpreadsheetData(
+          new Map(spreadsheetData).set(cellKey, {
+            ...currentData,
+            value: result,
+            formula: value,
+          })
+        );
+      } else {
+        // Handle regular value
+        setSpreadsheetData(
+          new Map(spreadsheetData).set(cellKey, {
+            ...currentData,
+            value,
+            formula: undefined,
+          })
+        );
+      }
     },
-    [spreadsheetData]
+    [spreadsheetData, evaluateFormula]
   );
 
   const handleFormulaChange = useCallback(
