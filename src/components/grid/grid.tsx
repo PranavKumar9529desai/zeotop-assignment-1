@@ -54,16 +54,22 @@ export default function Grid({
   const isColSelected = (colIndex: number) => selectedCell?.col === colIndex;
 
   return (
-    <div className="w-full h-full overflow-auto relative bg-[var(--spreadsheet-cell-bg)]" ref={gridRef}>
+    <div
+      className="w-full h-full overflow-auto relative bg-[var(--spreadsheet-cell-bg)]"
+      ref={gridRef}
+    >
       <table className="border-collapse table-fixed">
-        <GridHeader columnCount={columnCount} selectedColumn={selectedCell?.col} />
+        <GridHeader
+          columnCount={columnCount}
+          selectedColumn={selectedCell?.col}
+        />
         <tbody>
           {Array.from({ length: rowCount }).map((_, rowIndex) => (
             <tr key={`row-${rowIndex}`} data-row={rowIndex}>
               {/* Row header */}
-              <td 
+              <td
                 className={`spreadsheet-header left-0 z-20 w-12 h-8 flex items-center justify-center border-r border-b ${
-                  isRowSelected(rowIndex) ? 'spreadsheet-header-highlight' : ''
+                  isRowSelected(rowIndex) ? "spreadsheet-header-highlight" : ""
                 }`}
                 role="rowheader"
                 aria-rowindex={rowIndex + 1}

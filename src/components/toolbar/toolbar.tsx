@@ -21,7 +21,7 @@ export function Toolbar({
     <button
       type="button"
       onClick={onClick}
-      className="px-3 py-1 hover:bg-gray-100 rounded text-sm"
+      className="px-3 py-1 hover:bg-gray-100 rounded text-sm text-[var(--spreadsheet-text-primary)]"
     >
       {label}
     </button>

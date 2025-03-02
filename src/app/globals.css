@@ -13,20 +13,20 @@
   --spreadsheet-header-text: #4b5563;
   --spreadsheet-border: #e5e7eb;
   --spreadsheet-cell-bg: #ffffff;
-  --spreadsheet-cell-text: #111827;
   --spreadsheet-selected-cell-bg: #ebf5ff;
   --spreadsheet-hover-bg: #f9fafb;
   --spreadsheet-header-highlight-bg: #e5e7eb;
   --spreadsheet-header-highlight-text: #1f2937;
-  --spreadsheet-input-text: #111827;
+  /* Text Colors */
+  --spreadsheet-text-primary: #111827;
+  --spreadsheet-text-secondary: #374151;
+  --spreadsheet-text-input: #000000;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
-    --spreadsheet-cell-text: #f3f4f6;
-    --spreadsheet-input-text: #f3f4f6;
   }
 }
 
@@ -46,13 +46,9 @@ body {
 }
 
 .spreadsheet-cell {
-  @apply bg-[var(--spreadsheet-cell-bg)] text-[var(--spreadsheet-cell-text)] border-[var(--spreadsheet-border)] hover:bg-[var(--spreadsheet-hover-bg)];
+  @apply bg-[var(--spreadsheet-cell-bg)] border-[var(--spreadsheet-border)] hover:bg-[var(--spreadsheet-hover-bg)];
 }
 
 .spreadsheet-selected {
   @apply bg-[var(--spreadsheet-selected-cell-bg)];
-}
-
-.spreadsheet-input {
-  @apply text-[var(--spreadsheet-input-text)] bg-[var(--spreadsheet-cell-bg)];
 }

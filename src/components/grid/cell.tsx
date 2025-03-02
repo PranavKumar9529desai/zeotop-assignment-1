@@ -81,7 +81,7 @@ export default function Cell({
   };
 
   const getCellStyles = (styles: CellStyle): string => {
-    const classNames = ["w-full h-full px-1 overflow-hidden text-sm leading-8"];
+    const classNames = ["w-full h-full px-1 overflow-hidden text-sm leading-8 text-[var(--spreadsheet-text-primary)]"];
 
     if (styles.bold) classNames.push("font-bold");
     if (styles.italic) classNames.push("italic");
@@ -122,7 +122,7 @@ export default function Cell({
           onChange={(e) => onChange(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          className="spreadsheet-input absolute inset-0 w-full h-full px-1 border-2 border-blue-500 outline-none"
+          className="absolute inset-0 w-full h-full px-1 border-2 border-blue-500 outline-none text-[var(--spreadsheet-text-input)]"
         />
       ) : (
         <div className={getCellStyles(data.styles)}>{data.value}</div>
