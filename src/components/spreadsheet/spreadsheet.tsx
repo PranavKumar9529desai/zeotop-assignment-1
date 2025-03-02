@@ -1,5 +1,6 @@
 'use client';
 
+import { DataQualityToolbar } from '@/components/data-quality/DataQualityToolbar';
 import { FormulaBar } from '@/components/formula-bar/formula-bar';
 import Grid from '@/components/grid/grid';
 import { Toolbar } from '@/components/toolbar/toolbar';
@@ -10,6 +11,7 @@ import {
   calculateMin,
   calculateSum,
 } from '@/lib/actions/mathOperations';
+import type { GridData } from '@/lib/data-quality';
 import { useCallback, useState } from 'react';
 import {
   type CellData,
@@ -230,7 +232,7 @@ export function Spreadsheet() {
       }
 
       try {
-        let result;
+        let result: { error?: { type: string }; value?: number | string };
         switch (func) {
           case 'SUM':
             result = await calculateSum(range, values);
@@ -303,6 +305,94 @@ export function Spreadsheet() {
     setSelection(selection);
   }, []);
 
+  // Convert spreadsheetData to GridData format for DataQualityToolbar
+  const getGridData = useCallback((): GridData => {
+    if (spreadsheetData.size === 0) {
+      return [[null]]; // Return a minimal grid for empty spreadsheet
+    }
+
+    const keys = Array.from(spreadsheetData.keys());
+    const rows = keys.map((key) => Number.parseInt(key.split('-')[0], 10));
+    const cols = keys.map((key) => Number.parseInt(key.split('-')[1], 10));
+
+    const maxRow = Math.max(...rows, 0);
+    const maxCol = Math.max(...cols, 0);
+
+    // Ensure we have at least one cell
+    const gridData: GridData = Array(Math.max(maxRow + 1, 1))
+      .fill(null)
+      .map(() => Array(Math.max(maxCol + 1, 1)).fill(null));
+
+    for (const [key, data] of spreadsheetData.entries()) {
+      const [row, col] = key.split('-').map((n) => Number.parseInt(n, 10));
+      if (row >= 0 && col >= 0 && row < gridData.length && col < gridData[0].length) {
+        gridData[row][col] = data.value || null;
+      }
+    }
+
+    return gridData;
+  }, [spreadsheetData]);
+
+  // Handle data changes from DataQualityToolbar
+  const handleDataQualityChange = useCallback(
+    (newGridData: GridData) => {
+      if (!newGridData || !Array.isArray(newGridData) || newGridData.length === 0) {
+        console.error('Invalid grid data received');
+        return;
+      }
+
+      const newSpreadsheetData = new Map(spreadsheetData);
+
+      newGridData.forEach((row: (string | number | boolean | null)[], rowIndex: number) => {
+        if (!Array.isArray(row)) return;
+
+        row.forEach((value: string | number | boolean | null, colIndex: number) => {
+          const cellKey = getCellKey({ row: rowIndex, col: colIndex });
+          const currentData = spreadsheetData.get(cellKey) || getDefaultCellData();
+          newSpreadsheetData.set(cellKey, {
+            ...currentData,
+            value: value?.toString() || '',
+            formula: undefined,
+          });
+        });
+      });
+
+      setSpreadsheetData(newSpreadsheetData);
+    },
+    [spreadsheetData]
+  );
+
+  // Get the full range that encompasses all selected ranges
+  const getEffectiveRange = useCallback(() => {
+    if (selection.ranges.length === 0) {
+      return {
+        startRow: 0,
+        endRow: 0,
+        startCol: 0,
+        endCol: 0,
+      };
+    }
+
+    let minRow = Number.POSITIVE_INFINITY;
+    let maxRow = Number.NEGATIVE_INFINITY;
+    let minCol = Number.POSITIVE_INFINITY;
+    let maxCol = Number.NEGATIVE_INFINITY;
+
+    selection.ranges.forEach((range) => {
+      minRow = Math.min(minRow, range.start.row, range.end.row);
+      maxRow = Math.max(maxRow, range.start.row, range.end.row);
+      minCol = Math.min(minCol, range.start.col, range.end.col);
+      maxCol = Math.max(maxCol, range.start.col, range.end.col);
+    });
+
+    return {
+      startRow: minRow,
+      endRow: maxRow,
+      startCol: minCol,
+      endCol: maxCol,
+    };
+  }, [selection.ranges]);
+
   const currentCellData = getCurrentCellData();
 
   return (
@@ -314,6 +404,11 @@ export function Spreadsheet() {
         onAlignLeft={() => handleAlign('left')}
         onAlignCenter={() => handleAlign('center')}
         onAlignRight={() => handleAlign('right')}
+      />
+      <DataQualityToolbar
+        data={getGridData()}
+        selectedRange={getEffectiveRange()}
+        onDataChange={handleDataQualityChange}
       />
       <FormulaBar
         selectedCell={selection.activeCell}

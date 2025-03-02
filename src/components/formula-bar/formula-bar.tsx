@@ -130,16 +130,14 @@ export function FormulaBar({
                       <span className="font-semibold text-gray-900 min-w-[80px]">
                         {suggestion.name}
                       </span>
-                      <span className="text-gray-700 text-xs truncate">
-                        {suggestion.description}
-                      </span>
+                      <span className="text-gray-600 truncate">{suggestion.description}</span>
                     </div>
                   )}
                 </button>
               ))}
             </div>
           }
-          appendTo={() => document.body}
+          appendTo="parent"
           className="!rounded-none !border !shadow-sm !p-0"
         >
           <input
